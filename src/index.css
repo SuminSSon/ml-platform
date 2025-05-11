@@ -2,13 +2,3 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* 섹션 사이에 여유 공간 추가 */
-.section + .section {
-  @apply mt-8;
-}
-
-/* body background */
-body {
-  @apply bg-indigo-50;
-}

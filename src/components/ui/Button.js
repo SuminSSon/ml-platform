@@ -1,16 +1,18 @@
-import React from 'react';
-import clsx from 'clsx';
+import React from 'react'
+import clsx from 'clsx'
 
 /**
  * variant: primary / secondary / danger
  */
 function Button({ children, onClick, variant = 'primary', className = '' }) {
-  const base = 'px-4 py-2 rounded-lg font-semibold transition';
+  const base = 'px-4 py-2 rounded-lg font-semibold transition'
   const styles = {
     primary: 'bg-indigo-600 text-white hover:bg-indigo-700',
     secondary: 'bg-gray-100 text-gray-800 hover:bg-gray-200',
-    danger: 'bg-red-600 text-white hover:bg-red-700'
-  };
+    danger: 'bg-red-600 text-white hover:bg-red-700',
+    create:
+      'text-indigo-700 border border-indigo-700 text-sm hover:bg-gray-100',
+  }
 
   return (
     <button
@@ -19,7 +21,7 @@ function Button({ children, onClick, variant = 'primary', className = '' }) {
     >
       {children}
     </button>
-  );
+  )
 }
 
-export default Button;
+export default Button
