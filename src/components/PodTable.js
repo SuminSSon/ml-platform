@@ -1,59 +1,65 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { Layers } from 'lucide-react'
 import Card from './ui/Card'
 import Button from './ui/Button'
 import Modal from './ui/Modal'
-import { kubernetesAPI } from '../services/api'
+import { kubernetesAPI } from '../services/kubernetes'
 import ResourceAllocation from './ResourceAllocation'
 import Input from './ui/Input'
-
-const temp = [
-  {
-    name: 'standby-controller-6ddf7dc554-btzf6',
-    status: 'Stop',
-    cpu: '100%',
-    gpu: '100%',
-    memory: '100%',
-    job: 'job1',
-  },
-  {
-    name: 'pod2',
-    status: 'Running',
-    cpu: '100%',
-    gpu: '100%',
-    memory: '100%',
-    job: 'job2',
-  },
-]
 
 export default function PodTable({ pods }) {
   const [isOpen, setIsOpen] = useState(false)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [logs, setLogs] = useState([])
-  const [loading, setLoading] = useState(false)
+  const [socket, setSocket] = useState(null)
   const [selectedPod, setSelectedPod] = useState('')
+  const bottomRef = useRef(null)
 
-  // pods가 null 이거나 배열이 아닐 때 빈 배열로 대체
-  const safePods = Array.isArray(pods) ? temp : temp
+  const safePods = Array.isArray(pods) && pods.length > 0 ? pods : []
 
-  const openLogs = async (podName) => {
+  const openLogs = (podName) => {
     setSelectedPod(podName)
-    setLoading(true)
+    setLogs([])
     setIsOpen(true)
-    try {
-      const text = await kubernetesAPI.getPodLogs(podName)
-      setLogs(text.split('\n'))
-    } catch {
-      setLogs(['로그 불러오기 실패'])
-    } finally {
-      setLoading(false)
+
+    const ws = kubernetesAPI.connectLogStream(podName)
+
+    ws.onopen = () => {
+      console.log(`${podName} WebSocket 로그 연결됨`)
     }
+
+    ws.onmessage = (event) => {
+      const lines = event.data.split('\n')
+      setLogs((prev) => [...prev, ...lines.filter(Boolean)])
+    }
+
+    ws.onerror = (e) => {
+      console.error('로그 WebSocket 오류:', e)
+      setLogs(['로그 스트리밍 중 오류 발생'])
+    }
+
+    ws.onclose = () => {
+      console.warn('로그 WebSocket 연결 종료')
+    }
+
+    setSocket(ws)
   }
 
   const close = () => {
-    setIsOpen(false)
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.close()
+    }
+    setSocket(null)
     setLogs([])
+    setIsOpen(false)
   }
+
+  // 로그 추가 시 자동 스크롤
+  useEffect(() => {
+    if (bottomRef.current) {
+      bottomRef.current.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [logs])
 
   return (
     <>
@@ -68,20 +74,18 @@ export default function PodTable({ pods }) {
             파드 생성
           </Button>
         </h2>
-        <div className=''>
+        <div>
           <table className='min-w-full divide-y divide-gray-200 table-auto'>
             <thead className='bg-gray-50'>
               <tr>
-                {['파드명', '상태', 'CPU', 'GPU', '메모리', '작업'].map(
-                  (col) => (
-                    <th
-                      key={col}
-                      className='px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase'
-                    >
-                      {col}
-                    </th>
-                  )
-                )}
+                {['파드명', '상태', 'CPU', 'GPU', '메모리', 'Age', '재시작', '작업'].map((col) => (
+                  <th
+                    key={col}
+                    className='px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase'
+                  >
+                    {col}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody className='divide-y divide-gray-200'>
@@ -90,8 +94,8 @@ export default function PodTable({ pods }) {
                   className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
                   key={pod.name}
                 >
-                  <td className='px-6 py-4'>{pod.name}</td>
-                  <td className='px-6 py-4 text-center'>
+                  <td className='px-4 py-4'>{pod.name}</td>
+                  <td className='px-4 py-4 text-center'>
                     <span
                       className={`px-2 py-1 text-xs rounded-full ${
                         pod.status === 'Running'
@@ -102,23 +106,21 @@ export default function PodTable({ pods }) {
                       {pod.status}
                     </span>
                   </td>
-                  <td className='px-6 py-4'>{pod.cpu}</td>
-                  <td className='px-6 py-4'>{pod.gpu}</td>
-                  <td className='px-6 py-4'>{pod.memory}</td>
-                  <td className='px-6 py-4 text-right space-x-2'>
-                    <Button
-                      variant='secondary'
-                      onClick={() => openLogs(pod.name)}
-                    >
+                  <td className='px-4 py-4'>{pod.cpu}</td>
+                  <td className='px-4 py-4'>{pod.gpu}</td>
+                  <td className='px-4 py-4'>{pod.memory}</td>
+                  <td className='px-4 py-4 text-center'>
+                    {typeof pod.age === 'string' && pod.age.trim() !== '' ? pod.age : '-'}
+                  </td>
+                  <td className='px-4 py-4 text-center'>
+                    {typeof pod.restarts === 'number' ? pod.restarts : 0}
+                  </td>
+                  <td className='px-4 py-4 text-right space-x-2'>
+                    <Button variant='secondary' onClick={() => openLogs(pod.name)}>
                       로그 보기
                     </Button>
                     <ResourceAllocation />
-                    <Button
-                      variant='danger'
-                      onClick={() => {
-                        /* 중지 로직 */
-                      }}
-                    >
+                    <Button variant='danger' onClick={() => {}}>
                       중지
                     </Button>
                   </td>
@@ -130,16 +132,14 @@ export default function PodTable({ pods }) {
       </Card>
 
       <Modal isOpen={isOpen} onClose={close} title={`${selectedPod} 로그`}>
-        {loading ? (
-          <p>로딩 중…</p>
-        ) : (
-          <div className='bg-gray-900 text-gray-100 p-4 rounded-lg h-64 overflow-y-auto font-mono text-sm'>
-            {logs.map((line, i) => (
-              <div key={i}>{line}</div>
-            ))}
-          </div>
-        )}
+        <div className='bg-gray-900 text-gray-100 p-4 rounded-lg h-64 overflow-y-auto font-mono text-sm'>
+          {logs.map((line, i) => (
+            <div key={i}>{line}</div>
+          ))}
+          <div ref={bottomRef} />
+        </div>
       </Modal>
+
       <Modal
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}

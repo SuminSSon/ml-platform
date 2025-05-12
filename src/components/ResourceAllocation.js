@@ -5,7 +5,7 @@ import SectionHeader from './ui/SectionHeader'
 import Button from './ui/Button'
 import Input from './ui/Input'
 import Modal from './ui/Modal'
-import { kubernetesAPI } from '../services/api'
+import { kubernetesAPI } from '../services/kubernetes'
 
 export default function ResourceAllocation() {
   const [isOpen, setIsOpen] = useState(false)
