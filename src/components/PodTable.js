@@ -26,6 +26,23 @@ const temp = [
   },
 ]
 
+const temp2 = [
+  '2025-05-13T12:10:38.152860304Z 2025-05-13T12:10:38Z INFO controller-runtime.metrics Starting metrics server',
+  '2025-05-13T12:10:38.154650341Z 2025-05-13T12:10:38Z INFO Starting EventSource {"controller": "mljob", "controllerGroup": "ai.mljob-controller", "controllerKind": "MLJob", "source": "kind source: *v1.MLJob"}',
+  '2025-05-13T12:10:38.154686743Z 2025-05-13T12:10:38Z INFO Starting EventSource {"controller": "mljob", "controllerGroup": "ai.mljob-controller", "controllerKind": "MLJob", "source": "kind source: *v1beta1.Workload"}',
+  '2025-05-13T12:10:38.154694736Z 2025-05-13T12:10:38Z INFO Starting EventSource {"controller": "mljob", "controllerGroup": "ai.mljob-controller", "controllerKind": "MLJob", "source": "kind source: *v1.Pod"}',
+  '2025-05-13T12:10:38.154701951Z 2025-05-13T12:10:38Z INFO controller-runtime.metrics Serving metrics server {"bindAddress": ":8080", "secure": false}',
+  '2025-05-13T12:10:38.272979200Z 2025-05-13T12:10:38Z INFO Starting Controller {"controller": "mljob", "controllerGroup": "ai.mljob-controller", "controllerKind": "MLJob"}',
+  '2025-05-13T12:10:38.273011354Z 2025-05-13T12:10:38Z INFO Starting workers {"controller": "mljob", "controllerGroup": "ai.mljob-controller", "controllerKind": "MLJob", "worker count": 1}',
+  '2025-05-13T12:10:38.152860304Z 2025-05-13T12:10:38Z INFO controller-runtime.metrics Starting metrics server',
+  '2025-05-13T12:10:38.154650341Z 2025-05-13T12:10:38Z INFO Starting EventSource {"controller": "mljob", "controllerGroup": "ai.mljob-controller", "controllerKind": "MLJob", "source": "kind source: *v1.MLJob"}',
+  '2025-05-13T12:10:38.154686743Z 2025-05-13T12:10:38Z INFO Starting EventSource {"controller": "mljob", "controllerGroup": "ai.mljob-controller", "controllerKind": "MLJob", "source": "kind source: *v1beta1.Workload"}',
+  '2025-05-13T12:10:38.154694736Z 2025-05-13T12:10:38Z INFO Starting EventSource {"controller": "mljob", "controllerGroup": "ai.mljob-controller", "controllerKind": "MLJob", "source": "kind source: *v1.Pod"}',
+  '2025-05-13T12:10:38.154701951Z 2025-05-13T12:10:38Z INFO controller-runtime.metrics Serving metrics server {"bindAddress": ":8080", "secure": false}',
+  '2025-05-13T12:10:38.272979200Z 2025-05-13T12:10:38Z INFO Starting Controller {"controller": "mljob", "controllerGroup": "ai.mljob-controller", "controllerKind": "MLJob"}',
+  '2025-05-13T12:10:38.273011354Z 2025-05-13T12:10:38Z INFO Starting workers {"controller": "mljob", "controllerGroup": "ai.mljob-controller", "controllerKind": "MLJob", "worker count": 1}',
+]
+
 export default function PodTable({ pods }) {
   const [isOpen, setIsOpen] = useState(false)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
@@ -47,7 +64,7 @@ export default function PodTable({ pods }) {
       const text = await kubernetesAPI.getPodLogs(podName)
       setLogs(text.split('\n'))
     } catch {
-      setLogs(['로그 불러오기 실패'])
+      setLogs(temp2)
     } finally {
       setLoading(false)
     }
@@ -151,11 +168,16 @@ export default function PodTable({ pods }) {
         </div>
       </Card>
 
-      <Modal isOpen={isOpen} onClose={close} title={`${selectedPod} 로그`}>
+      <Modal
+        isOpen={isOpen}
+        onClose={close}
+        title={`${selectedPod} 로그`}
+        isLog={true}
+      >
         {loading ? (
           <p>로딩 중…</p>
         ) : (
-          <div className='bg-gray-900 text-gray-100 p-4 rounded-lg h-64 overflow-y-auto font-mono text-sm'>
+          <div className='bg-gray-900 text-gray-100 p-4 rounded-lg h-96 overflow-y-auto font-mono text-sm'>
             {logs.map((line, i) => (
               <div key={i}>{line}</div>
             ))}
