@@ -32,6 +32,9 @@ export default function PodTable({ pods }) {
   const [logs, setLogs] = useState([])
   const [loading, setLoading] = useState(false)
   const [selectedPod, setSelectedPod] = useState('')
+  const [podName, setPodName] = useState('')
+  const [requirements, setRequirements] = useState('')
+  const [file, setFile] = useState(null)
 
   // pods가 null 이거나 배열이 아닐 때 빈 배열로 대체
   const safePods = Array.isArray(pods) ? temp : temp
@@ -53,6 +56,25 @@ export default function PodTable({ pods }) {
   const close = () => {
     setIsOpen(false)
     setLogs([])
+  }
+
+  const submitApi = async () => {
+    /**
+     * podName, requirements는 string
+     * file은 File 객체인데 여기서 에러가 발생할 수도 있음. 이는 걍
+     * 서버 요구사항에 맞춰서 gpt한테 너가 짜달라고 하면 짜줄거임
+     */
+    console.log('Pod Name:', podName)
+    console.log('Requirements:', requirements)
+    console.log('File:', file)
+
+    // 여기는 너가 알아서 API 구현해서 넣으면 됨
+    // try {
+    //   const response = await kubernetesAPI.createPod(podName, requirements, file)
+    //   console.log(response)
+    // } catch (error) {
+    //   console.error(error)
+    // }
   }
 
   return (
@@ -145,14 +167,26 @@ export default function PodTable({ pods }) {
         onClose={() => setIsCreateOpen(false)}
         title='파드 생성'
       >
-        <Input label='파드 이름' />
-        <Input label='요구 사항' />
-        <Input label='파일 추가' type='file' />
+        <Input
+          label='파드 이름'
+          value={podName}
+          onChange={(e) => setPodName(e.target.value)}
+        />
+        <Input
+          label='요구 사항'
+          value={requirements}
+          onChange={(e) => setRequirements(e.target.value)}
+        />
+        <Input
+          label='파일 추가'
+          type='file'
+          onChange={(e) => setFile(e.target.files[0])}
+        />
         <div className='mt-6 flex justify-end space-x-2'>
           <Button variant='secondary' onClick={() => setIsCreateOpen(false)}>
             취소
           </Button>
-          <Button>생성</Button>
+          <Button onClick={submitApi}>생성</Button>
         </div>
       </Modal>
     </>
