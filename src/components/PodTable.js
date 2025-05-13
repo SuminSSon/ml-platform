@@ -132,8 +132,8 @@ export default function PodTable({ pods }) {
       </Card>
 
       <Modal isOpen={isOpen} onClose={close} title={`${selectedPod} 로그`}>
-        <div className='bg-gray-900 text-gray-100 p-4 rounded-lg h-64 overflow-y-auto font-mono text-sm'>
-          {logs.map((line, i) => (
+      <div className="bg-gray-900 text-gray-100 p-4 rounded-lg max-h-[80vh] overflow-y-auto font-mono text-sm">
+        {logs.map((line, i) => (
             <div key={i}>{line}</div>
           ))}
           <div ref={bottomRef} />
