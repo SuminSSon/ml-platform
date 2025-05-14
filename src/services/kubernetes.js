@@ -61,6 +61,6 @@ export const kubernetesAPI = {
   async getTrainingLogs(podName) {
     const res = await fetch(`${API_BASE}/pods/${podName}/logs?format=json`)
     if (!res.ok) throw new Error('학습 로그 조회 실패')
-    return await res.json()
+    return await res.text()
   },
 }
